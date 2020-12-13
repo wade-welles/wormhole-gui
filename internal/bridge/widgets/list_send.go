@@ -119,24 +119,25 @@ func (p *SendList) OnDirSelect(dir fyne.ListableURI, err error) {
 	}
 
 	p.NewSendItem(dir)
-	code, result, err := p.bridge.NewDirSend(dir, p.Items[p.Length()-1].Progress.Update)
-	if err != nil {
-		fyne.LogError("Error on sending directory", err)
-		dialog.ShowError(err, fyne.CurrentApp().Driver().AllWindows()[0])
-		return
-	}
 
-	p.Items[p.Length()-1].Code = code
-	p.Refresh()
+	go func() {
+		code, result, err := p.bridge.NewDirSend(dir, p.Items[p.Length()-1].Progress.Update)
+		if err != nil {
+			fyne.LogError("Error on sending directory", err)
+			dialog.ShowError(err, fyne.CurrentApp().Driver().AllWindows()[0])
+			return
+		}
 
-	go func(status chan wormhole.SendResult) {
+		p.Items[p.Length()-1].Code = code
+		p.Refresh()
+
 		if res := <-result; res.Error != nil {
 			fyne.LogError("Error on sending directory", res.Error)
 			dialog.ShowError(res.Error, fyne.CurrentApp().Driver().AllWindows()[0])
 		} else if res.OK && p.bridge.Notifications {
 			fyne.CurrentApp().SendNotification(fyne.NewNotification("Send completed", "The directory was sent successfully"))
 		}
-	}(result)
+	}()
 }
 
 // SendText sends new text.
