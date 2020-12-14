@@ -23,7 +23,7 @@ func (b *Bridge) NewDirSend(dir fyne.ListableURI, progress wormhole.SendOption) 
 	prefix, _ := filepath.Split(dirpath)
 
 	var files []wormhole.DirectoryEntry
-	err := filepath.Walk(dirpath, func(path string, info os.FileInfo, err error) error {
+	if err := filepath.Walk(dirpath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		} else if info.IsDir() || !info.Mode().IsRegular() {
@@ -39,9 +39,7 @@ func (b *Bridge) NewDirSend(dir fyne.ListableURI, progress wormhole.SendOption) 
 		})
 
 		return nil
-	})
-
-	if err != nil {
+	}); err != nil {
 		fyne.LogError("Error on walking directory", err)
 		return "", nil, err
 	}
